@@ -9,12 +9,14 @@ from model_fusion import constructer,rearranger
 
 import pickle
 
+import sys
+
 #Experiment name
-NAME="attempt_4"
-EPOCH = 50
+NAME="attempt_1"
+EPOCH = 1
 
 def set_expn_name(name):
-    file_path=".\config.json"
+    file_path="./config.json"
     with open(file_path, "r") as json_file:
         data = json.load(json_file)
 
@@ -28,7 +30,7 @@ def set_expn_name(name):
     print("Updated Experiment Name:", data["name"] )
 
 def set_savdir_name(name):
-    file_path=".\config.json"
+    file_path="./config.json"
     with open(file_path, "r") as json_file:
         data = json.load(json_file)
 
@@ -51,7 +53,7 @@ def kfold(args,level):
         print(f"Fold number {fold_id+1}")
     # config is a Configparser object
         config = ConfigParser.from_args(args, fold_id, options)
-        if "shhs" in args2.np_data_dir:
+        if "SHHS" in args2.np_data_dir:
             folds_data = load_folds_data_shhs(args2.np_data_dir, config["data_loader"]["args"]["num_folds"])
         else:
             folds_data = load_folds_data(args2.np_data_dir, config["data_loader"]["args"]["num_folds"])
@@ -61,6 +63,7 @@ def kfold(args,level):
             pickle.dump(folds_data[fold_id], file)
         order=[int(i) for i in args2.order.split()]
         one_fold_cross_val(config, fold_id,folds_data,order,level)
+        # sys.exit()
 
 
 if __name__ == '__main__':
@@ -76,19 +79,21 @@ if __name__ == '__main__':
                       help='Directory containing numpy files')
     
     args2 = args.parse_args()
-    savdir=f'./saved/{(args2.order).replace(" ","_")}'
+    savdir = f'C:/Users/athul/myfiles/Work/Research/Sleep Stage/SHHS Cascading Order Analysis Result Construction/saved_SHHS/{(args2.order).replace(" ","_")}'    
     set_savdir_name(savdir)
-    for i in range(4):
-        set_expn_name("model"+str(i+1))
-        # kfold(args,i)
+    # for i in range(4):
+    #     set_expn_name("model"+str(i+1))
+    #     kfold(args,i)
 
-
-    data_paths=load_folds_data(r"C:\Users\athul\myfiles\Research\Sleep Stage\double sleep model\data_archive\sleep-edf-13-fpz_cz", 20)
+    if "SHHS" in args2.np_data_dir:
+        data_paths = load_folds_data_shhs(args2.np_data_dir, 20)
+    else:
+        data_paths = load_folds_data(args2.np_data_dir, 20)
     for i in range(20):
-        data_paths[i][0]=sorted(data_paths[i][0],key=lambda x:x.split('\\')[-1][3:6])
+        data_paths[i][0]=sorted(data_paths[i][0],key=lambda x:x.split('\\')[-1][8:12])
     lst=data_paths[1][0].copy()
     lst.extend(data_paths[1][1])
-    lst=sorted(lst,key=lambda x:x.split('\\')[-1][3:6])
+    lst=sorted(lst,key=lambda x:x.split('\\')[-1][8:12]) #use [8:12] for shhs and [3:6] for sleep-edf
     rearranger(lst)
     order=[int(i) for i in args2.order.split()]
     constructer(order)

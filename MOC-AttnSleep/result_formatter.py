@@ -9,6 +9,7 @@ from glob import glob
 import math
 
 def order_fixer_pt1(arr,lst):
+    """To find order of patients in the folds target outputs and return list of paths to patient input files in that order"""
     order=[]
     end=0
     while(end!=(len(arr))):
@@ -24,7 +25,7 @@ def order_fixer_pt1(arr,lst):
                 l.append(i)
                 order.append(f)
         if len(l)>1:
-            print("f")
+            print("found more than one match")
             import sys
             sys.exit()
         else:
@@ -35,6 +36,7 @@ def order_fixer_pt1(arr,lst):
     return order
 
 def order_fixer_pt2(arr,lst):
+    """output a dictionary with paths to patient input files as keys and value as range of output array corresponding to that train file in the target outputs of the fold"""
     order=order_fixer_pt1(arr,lst)
     new_order=[0]
     for i in order:

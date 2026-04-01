@@ -7,47 +7,31 @@ class LoadDataset_from_numpy(Dataset):
     # Initialize your data, download, etc.
     def __init__(self, np_dataset,order,level,mode="train"):
         super(LoadDataset_from_numpy, self).__init__()
+        
+        # Load all files at once (vectorized)
+        X_list = [np.load(f)["x"] for f in np_dataset]
+        y_list = [np.load(f)["y"] for f in np_dataset]
+        X_train = np.vstack(X_list)
+        y_train = np.concatenate(y_list)
+        
         if mode=="train":
-            # load files
-            X_train = np.load(np_dataset[0])["x"]
-            y_train = np.load(np_dataset[0])["y"]
-            n_del=0
-            for idx,value in enumerate(y_train):
-                idx-=n_del
-                if y_train[idx] in order[level+1:]:
-                    y_train[idx]=0
-                elif y_train[idx] == order[level]:
-                    y_train[idx]=1
-                else:
-                    X_train = np.delete(X_train,idx, axis=0)
-                    y_train = np.delete(y_train,idx)
-                    n_del+=1
-                    continue
-            for np_file in np_dataset[1:]:
-                tempx = np.load(np_file)["x"]
-                tempy = np.load(np_file)["y"]
-                n_del=0
-                for idx,value in enumerate(tempy):
-                    idx-=n_del
-                    if tempy[idx] in order[level+1:]:
-                        tempy[idx]=0
-                    elif tempy[idx] == order[level]:
-                        tempy[idx]=1
-                    else:
-                        tempx = np.delete(tempx,idx,axis=0)
-                        tempy = np.delete(tempy,idx)
-                        n_del+=1
-                        continue
-                X_train = np.vstack((X_train, tempx))
-                y_train = np.append(y_train, tempy)
+            # Vectorized filtering using boolean masks
+            # Create masks for each condition
+            mask_keep_as_0 = np.isin(y_train, order[level+1:])  # Labels to convert to 0
+            mask_keep_as_1 = (y_train == order[level])           # Label to convert to 1
+            mask_keep = mask_keep_as_0 | mask_keep_as_1         # Combined: keep these samples
+            
+            # Update labels
+            y_train[mask_keep_as_0] = 0
+            y_train[mask_keep_as_1] = 1
+            
+            # Apply mask to both X and y
+            X_train = X_train[mask_keep]
+            y_train = y_train[mask_keep]
 
         else:
-            # load files
-            X_train = np.load(np_dataset[0])["x"]
-            y_train = np.load(np_dataset[0])["y"]
-            for np_file in np_dataset[1:]:
-                X_train = np.vstack((X_train, np.load(np_file)["x"]))
-                y_train = np.append(y_train, np.load(np_file)["y"])
+            # Test mode: no filtering, just load all data
+            pass
 
         self.len = X_train.shape[0]
         self.x_data = torch.from_numpy(X_train)

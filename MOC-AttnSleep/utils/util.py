@@ -23,15 +23,26 @@ def load_folds_data_shhs(np_data_path, n_folds):
 
 def load_folds_data(np_data_path, n_folds):
     files = sorted(glob(os.path.join(np_data_path, "*.npz")))
+    
+    if not files:
+        print("============== ERROR =================")
+        print(f"No .npz files found in: {np_data_path}")
+        print(f"Please verify the data directory path is correct")
+        import sys
+        sys.exit(1)
+    
     if "78" in np_data_path:
-        r_p_path = r"C:\Users\athul\myfiles\Research\Sleep Stage\double sleep model\duo\model_2\utils\r_permute_20.npy"
+        r_p_path = r"utils/r_permute_78.npy"
     else:
-        r_p_path = r"C:\Users\athul\myfiles\Research\Sleep Stage\double sleep model\duo\model_2\utils\r_permute_20.npy"
+        r_p_path = r"utils/r_permute_20.npy"
 
     if os.path.exists(r_p_path):
         r_permute = np.load(r_p_path)
     else:
         print ("============== ERROR =================")
+        print(f"Permutation file not found at: {r_p_path}")
+        import sys
+        sys.exit(1)
 
 
     files_dict = dict()
@@ -43,7 +54,9 @@ def load_folds_data(np_data_path, n_folds):
         else:
             files_dict[file_num].append(i)
     # print(files)
-    files_dict["13"].append("")
+    for i in files_dict:
+        if len(files_dict[i])!=2:
+            files_dict[i].append("")
     files_pairs = []
     for key in files_dict:
         files_pairs.append(files_dict[key])

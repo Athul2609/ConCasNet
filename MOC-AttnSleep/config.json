@@ -1,5 +1,5 @@
 {
-    "name": "model4",
+    "name": "model1",
     "n_gpu": 1,
     "arch": {
         "type": "AttnSleep",
@@ -25,7 +25,7 @@
     ],
     "trainer": {
         "epochs": 50,
-        "save_dir": "./saved/2_3_0_4_1",
+        "save_dir": "C:/Users/athul/myfiles/Work/Research/Sleep Stage/SHHS Cascading Order Analysis Result Construction/saved_SHHS/3_0_2_4_1",
         "save_period": 50,
         "verbosity": 2,
         "monitor": "min val_loss"

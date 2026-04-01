@@ -222,6 +222,7 @@ class LayerNorm(nn.Module):
     def forward(self, x):
         mean = x.mean(-1, keepdim=True)
         std = x.std(-1, keepdim=True)
+        # print(f"x shape: {x.shape}, mean shape: {mean.shape}, std shape: {std.shape}, a_2 shape: {self.a_2.shape}, b_2 shape: {self.b_2.shape}")
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
 
@@ -306,14 +307,14 @@ class AttnSleep(nn.Module):
         super(AttnSleep, self).__init__()
 
         N = 2  # number of TCE clones
-        d_model = 80  # set to be 100 for SHHS dataset
+        d_model = 100  # set to be 100 for SHHS dataset
         d_ff = 120   # dimension of feed forward
         h = 2 # number of attention heads
         dropout = 0.1
         num_classes = 2
         afr_reduced_cnn_size = 30
 
-        self.mrcnn = MRCNN(afr_reduced_cnn_size) # use MRCNN_SHHS for SHHS dataset
+        self.mrcnn = MRCNN_SHHS(afr_reduced_cnn_size) # use MRCNN_SHHS for SHHS dataset
 
         attn = MultiHeadedAttention(h, d_model, afr_reduced_cnn_size)
         ff = PositionwiseFeedForward(d_model, d_ff, dropout)

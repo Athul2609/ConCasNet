@@ -22,7 +22,7 @@ def load_data_and_arrays(result_directory):
     return loaded_arrays
 
 
-def main(result_directory,weight):
+def main(result_directory,weight,mode="val"):
     loaded_arrays=load_data_and_arrays(result_directory)
     # print(f"The paths are-\n {loaded_arrays}")
 
@@ -36,14 +36,23 @@ def main(result_directory,weight):
     model.transmat_ = tm
     model.emissionprob_ = em
 
+    if mode=="train":
+        observed_sequence=breaker_observed(loaded_arrays["outs_train"],loaded_arrays["prob_train"],weight)
+        actual_labels=np.load(loaded_arrays["trgs_train"])
+        n_trials = 1
+        hidden_sequence = model.predict(observed_sequence.reshape(-1, 1).astype(np.int32))
+        outs_name = f"outs_{mode}_hmm_weighted"
+        np.save(os.path.join(result_directory,outs_name), hidden_sequence)
+        return accuracy_score(actual_labels,hidden_sequence)
     # print("-------------validation---------------")
-    observed_sequence=breaker_observed(loaded_arrays["outs_val"],loaded_arrays["prob_val"],weight)
-    actual_labels=np.load(loaded_arrays["trgs_val"])
-    n_trials = 1
-    hidden_sequence = model.predict(observed_sequence.reshape(-1, 1).astype(np.int32))
-    outs_name = "outs_val_hmm_weighted"
-    np.save(os.path.join(result_directory,outs_name), hidden_sequence)
-    return accuracy_score(actual_labels,hidden_sequence)
+    else:
+        observed_sequence=breaker_observed(loaded_arrays["outs_val"],loaded_arrays["prob_val"],weight)
+        actual_labels=np.load(loaded_arrays["trgs_val"])
+        n_trials = 1
+        hidden_sequence = model.predict(observed_sequence.reshape(-1, 1).astype(np.int32))
+        outs_name = f"outs_{mode}_hmm_weighted"
+        np.save(os.path.join(result_directory,outs_name), hidden_sequence)
+        return accuracy_score(actual_labels,hidden_sequence)
 
 
 if __name__ == "__main__":
@@ -51,13 +60,14 @@ if __name__ == "__main__":
     parser.add_argument("result_directory", help="Path to the result directory")
     parser.add_argument("weight", help="seperating probability")
     parser.add_argument("compute",default="no")
+    parser.add_argument("mode",default="val")
     
     args = parser.parse_args()
     if(args.compute=="yes"):
         max_acc=0
-        best_weights=[0.0,0.0,0.0,0.0,0.0]
+        best_weights=[0.50,0.50,0.50,0.50,0.50]
         for i in range(5):
-            for k in range(0,100,5):
+            for k in range(50,100,5):
                 j=best_weights.copy()
                 j=[float(g) for g in j]
                 j=np.array(j)
@@ -66,9 +76,10 @@ if __name__ == "__main__":
                 for root, directories, files in os.walk(args.result_directory):
                     for directory in directories:
                         inp_dir=os.path.join(root, directory)
-                        main(inp_dir,j)
-                temp=calc_metrics(args.result_directory,j)
+                        main(inp_dir,j,mode=args.mode)
+                temp=calc_metrics(args.result_directory,j,args.mode)
                 if(temp>max_acc):
+                    print(f"Updating weight to {j}")
                     max_acc=temp
                     best_weights=j
                 best_n=j[i]
@@ -81,17 +92,18 @@ if __name__ == "__main__":
                 for root, directories, files in os.walk(args.result_directory):
                     for directory in directories:
                         inp_dir=os.path.join(root, directory)
-                        main(inp_dir,j)
-                temp=calc_metrics(args.result_directory,j)
+                        main(inp_dir,j,mode=args.mode)
+                temp=calc_metrics(args.result_directory,j,args.mode)
                 if(temp>max_acc):
+                    print(f"Updating weight to {j}")
                     max_acc=temp
                     best_weights=j
         for root, directories, files in os.walk(args.result_directory):
             for directory in directories:
                 inp_dir=os.path.join(root, directory)
-                main(inp_dir,best_weights)
-        temp=calc_metrics(args.result_directory,best_weights)
-        print(f"Current accuracy : {max_acc}")
+                main(inp_dir,best_weights,"val")
+        temp=calc_metrics(args.result_directory,best_weights,"val")
+        print(f"Current accuracy : {temp}")
         print(f"Weights: {best_weights}")
         # accs.append(calc_metrics(args.result_directory,j))
     else:
@@ -99,6 +111,7 @@ if __name__ == "__main__":
         for root, directories, files in os.walk(args.result_directory):
             for directory in directories:
                 inp_dir=os.path.join(root, directory)
-                main(inp_dir,j)
-        temp=calc_metrics(args.result_directory,j)
+                main(inp_dir,j,args.mode)
+        temp=calc_metrics(args.result_directory,j,args.mode)
+        print(f"accuracy {temp}")
 # python hmm_input.py /path/to/result_directory
