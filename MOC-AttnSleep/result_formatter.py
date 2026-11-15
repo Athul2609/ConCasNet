@@ -12,27 +12,34 @@ def order_fixer_pt1(arr,lst):
     """To find order of patients in the folds target outputs and return list of paths to patient input files in that order"""
     order=[]
     end=0
-    while(end!=(len(arr))):
+    while(end != len(arr)):
         l=[]
         for f in lst:
-            match=1
-            i= np.load(f)["y"]
-            for j in range(len(i)):
-                if(i[j]!=arr[end+j]):
-                    match=0
-                    break
-            if(match==1):
-                l.append(i)
-                order.append(f)
-        if len(l)>1:
+            try:
+                i = np.load(f)["y"]
+                # if len(i) > len(arr) - end:
+                #     continue  # Skip if segment too short
+                match = True
+                for j in range(len(i)):
+                    if i[j] != arr[end + j]:
+                        match = False
+                        break
+                if match:
+                    l.append(i)
+                    order.append(f)
+            except (KeyError, FileNotFoundError, ValueError) as e:
+                print(f"Error loading {f}: {e}")
+                continue
+        if len(l) > 1:
             print("found more than one match")
             import sys
             sys.exit()
+        elif len(l) == 1:
+            end += len(l[0])
         else:
-            if end==0:
-                end+=len(l[0])
-            else:
-                end+=len(l[0])
+            print(f"No match found for segment starting at {end}")
+            import sys
+            sys.exit()  # Or handle differently
     return order
 
 def order_fixer_pt2(arr,lst):
@@ -54,8 +61,12 @@ def reconstruct(arr,final_order,lst):
         try:
             for k in range(final_order[i][0],final_order[i][1]):
                 new_op.append(arr[k])
-        except :
-            print("",end="")
+        except KeyError:
+            # print(f"Warning: {i} not found in final_order, skipping")
+            pass
+        except IndexError as e:
+            print(f"IndexError for {i}: {e}")
+            raise
     return np.array(new_op)
     
 

@@ -222,7 +222,6 @@ class LayerNorm(nn.Module):
     def forward(self, x):
         mean = x.mean(-1, keepdim=True)
         std = x.std(-1, keepdim=True)
-        # print(f"x shape: {x.shape}, mean shape: {mean.shape}, std shape: {std.shape}, a_2 shape: {self.a_2.shape}, b_2 shape: {self.b_2.shape}")
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
 
@@ -303,18 +302,27 @@ class PositionwiseFeedForward(nn.Module):
 
 
 class AttnSleep(nn.Module):
+    """One binary classifier of the ConCasNet cascade (MOCAttnSleep).
+
+    Same architecture as AttnSleep except h = 2 attention heads and num_classes = 2
+    (AttnSleep: 5 and 5), because each classifier separates one stage from the rest.
+
+    DATASET SWITCH - edit the two lines marked below:
+        Sleep-EDF-20 / Sleep-EDF-78 (100 Hz, 3000 samples): d_model = 80,  MRCNN
+        SHHS                        (125 Hz, 3750 samples): d_model = 100, MRCNN_SHHS
+    """
     def __init__(self):
         super(AttnSleep, self).__init__()
 
         N = 2  # number of TCE clones
-        d_model = 100  # set to be 100 for SHHS dataset
+        d_model = 80  # <-- DATASET SWITCH: 80 for Sleep-EDF, 100 for SHHS
         d_ff = 120   # dimension of feed forward
         h = 2 # number of attention heads
         dropout = 0.1
         num_classes = 2
         afr_reduced_cnn_size = 30
 
-        self.mrcnn = MRCNN_SHHS(afr_reduced_cnn_size) # use MRCNN_SHHS for SHHS dataset
+        self.mrcnn = MRCNN(afr_reduced_cnn_size)  # <-- DATASET SWITCH: MRCNN for Sleep-EDF, MRCNN_SHHS for SHHS
 
         attn = MultiHeadedAttention(h, d_model, afr_reduced_cnn_size)
         ff = PositionwiseFeedForward(d_model, d_ff, dropout)

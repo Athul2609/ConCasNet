@@ -9,6 +9,8 @@ from glob import glob
 import math
 
 def load_folds_data_shhs(np_data_path, n_folds):
+    """SHHS folds, identical to AttnSleep: sorted files -> utils/r_permute_shhs.npy -> n_folds parts.
+    Chosen by kfoldcv.py when "SHHS" (capital letters) is in the data path."""
     files = sorted(glob(os.path.join(np_data_path, "*.npz")))
     r_p_path = r"utils/r_permute_shhs.npy"
     r_permute = np.load(r_p_path)
@@ -22,6 +24,9 @@ def load_folds_data_shhs(np_data_path, n_folds):
     return folds_data
 
 def load_folds_data(np_data_path, n_folds):
+    """Sleep-EDF folds, identical to AttnSleep: sorted files -> fixed permutation
+    (utils/r_permute_78.npy if "78" is in the path, else r_permute_20.npy) -> n_folds parts.
+    Both nights of a subject are kept in the same fold. Returns {fold: [train_files, test_files]}."""
     files = sorted(glob(os.path.join(np_data_path, "*.npz")))
     
     if not files:
@@ -75,6 +80,14 @@ def load_folds_data(np_data_path, n_folds):
 
 
 def calc_class_weight(labels_count,order,level):
+    """Class weights of the binary classifier at cascade `level` (0-3).
+
+    Index 0 = "rest" (stages handled later in the cascade), index 1 = target stage order[level].
+    beta = coefficient / number of classes, with AttnSleep's coefficients
+    (Awake 1.5, N1 2, N2 1.5, N3 1, REM 1.5). The rest class uses coefficient 1, except at
+    the last level, where the rest class is the single remaining stage order[-1].
+    Used unchanged for Sleep-EDF-20, Sleep-EDF-78 and SHHS.
+    """
     total = np.sum(labels_count)
     class_weight = dict()
     num_classes = len(labels_count)
@@ -86,7 +99,7 @@ def calc_class_weight(labels_count,order,level):
     Y=coeff_X[order[level]]
     # print(num_classes)
     factor = 1 / num_classes
-    mu = [factor*X, factor *Y] # THESE CONFIGS ARE FOR SLEEP-EDF-20 ONLY
+    mu = [factor*X, factor *Y]  # [beta_rest, beta_target]
 
     for key in range(num_classes):
         score = math.log(mu[key] * total / float(labels_count[key]))
@@ -144,8 +157,3 @@ class MetricTracker:
 
     def result(self):
         return dict(self._data.average)
-
-
-if __name__=="__main__":
-    p=r"C:\Users\athul\myfiles\Research\Sleep Stage\double sleep model\data_archive\sleep-edf-13-fpz_cz"
-    print(load_folds_data(p, 20))

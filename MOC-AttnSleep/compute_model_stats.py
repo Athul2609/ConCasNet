@@ -44,7 +44,7 @@ def main():
     parser.add_argument('-r', '--resume', default=None, type=str, help='path to latest checkpoint (default: None)')
     parser.add_argument('-d', '--device', default=None, type=str, help='indices of GPUs to enable (default: all)')
     parser.add_argument('-i', '--input-shape', default='1,3000', type=str,
-                        help='input shape as C,L or C,H,W (comma separated)')
+                        help='input shape as C,L: 1,3000 for Sleep-EDF (100 Hz), 1,3750 for SHHS (125 Hz)')
     parser.add_argument('--use-cuda', action='store_true', help='use GPU for analysis')
     # Pass the parser object to ConfigParser so it can call parse_args()
     config = ConfigParser.from_args(parser, 1, [])

@@ -26,11 +26,7 @@ import torch
 from result_formatter import reconstruct,order_fixer_pt2
 
 #Experiment name
-with open('./config.json', "r") as json_file:
-        data = json.load(json_file)
-NAME=data["name"]
-EPOCH =data["trainer"]["epochs"]
-SAVED=data["trainer"]["save_dir"]
+# Moved to functions to read dynamically, else we would read a stale config
 model_prefix=["model1","model2","model3","model4"]
 
 def get_final_lists(folder_path,pref):
@@ -101,6 +97,10 @@ def getFusionOutputPath(pref='n'):
         targets for each of the 4 models.
     
     """
+    with open('./config.json', "r") as json_file:
+        data = json.load(json_file)
+    SAVED = data["trainer"]["save_dir"]
+    print(SAVED)
     model_output_paths={}
     for fold_no in range(20):
         str_to_match = f"_fold{fold_no}"
@@ -155,6 +155,8 @@ def merger(arr,order,mode):
     trgs=np.load(trgs)
     outputs=np.load(arr[trgs_output][0])
     temp=arr[trgs_output][1]
+    # print(arr)
+    # print(f"Order: {order}")
     # count=0
     temp=np.load(temp)
     for idx,i in enumerate(outputs):
@@ -351,6 +353,9 @@ def constructer(order):
         Ordering permutation used for both probability and discrete output
         merging.
     """
+    with open('./config.json', "r") as json_file:
+        data = json.load(json_file)
+    NAME = data["name"]
     # set_expn_name(NAME,EPOCH)
     direc=get_save_dir()
     # print(op_path)

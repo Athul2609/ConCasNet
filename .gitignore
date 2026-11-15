@@ -1,4 +1,19 @@
+# training outputs
 /MOC-AttnSleep/saved_SHHS/
 /MOC-AttnSleep/saved/
+saved/
 *.npy
+!MOC-AttnSleep/utils/r_permute_*.npy
+*.pth
+*.torch
+
+# python / editor
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.vscode/
+.github/
+
+# local notes and scratch
+Docs/
 test_data_loader_optimization.py
